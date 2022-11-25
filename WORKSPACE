@@ -1,4 +1,4 @@
-workspace(name = "pointer_workspace")
+workspace(name = "module_workspace")
 
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
