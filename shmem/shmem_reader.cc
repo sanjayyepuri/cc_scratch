@@ -45,6 +45,5 @@ auto main() -> int
     }
 
     shm_unlink("hello.mem");
-
     return 0;
 }
