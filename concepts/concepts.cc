@@ -24,6 +24,21 @@ concept HasFunction = requires(T a) {
   { a.function(0) } -> std::same_as<std::int32_t>;
 };
 
+
+// Attempting to constrain the template parameter T to ensure that the type has the
+// required function. However, concepts do not work here. If FunctionCallWrapper is
+// used as a CRTP the type T is not completely defined at the time the concept is
+// evaluated.
+//
+// ```
+// concepts/concepts.h:18:23: error: constraints not satisfied for class template 'FunctionCallWrapper' [with T = Object]
+// class Object : public FunctionCallWrapper<Object> {
+//                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+// concepts/concepts.h:11:11: note: because 'Object' does not satisfy 'HasFunction'
+// template <HasFunction T> class FunctionCallWrapper {
+// ```
+//
+// This is user error.
 template <typename T> class FunctionCallWrapper {
 public:
   auto function_wrap(std::int32_t value) -> std::int32_t
@@ -53,6 +68,17 @@ auto main() -> int {
   std::cout << obj.function(14) << std::endl;
 
   auto bad_obj = BadObject{};
+
+  // concepts/concepts.cc:71:24: error: invalid reference to function 'function_wrap': constraints not satisfied
+  //   std::cout << bad_obj.function_wrap(100) << std::endl;
+  //                        ^
+  // concepts/concepts.cc:45:14: note: because 'BadObject' does not satisfy 'HasFunction'
+  //     requires HasFunction<T>
+  //              ^
+  // concepts/concepts.cc:24:24: note: because type constraint 'std::same_as<double, std::int32_t>' was not satisfied:
+  //   { a.function(0) } -> std::same_as<std::int32_t>;
+  //                        ^
+  //
   // std::cout << bad_obj.function_wrap(100) << std::endl;
 
   return 0;
