@@ -31,15 +31,27 @@ concept HasFunction = requires(T a) {
 // evaluated.
 //
 // ```
-// concepts/concepts.h:18:23: error: constraints not satisfied for class template 'FunctionCallWrapper' [with T = Object]
+// concepts/concepts.cc:51:23: error: constraints not satisfied for class template 'FunctionCallWrapper' [with T = Object]
 // class Object : public FunctionCallWrapper<Object> {
-//                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~
-// concepts/concepts.h:11:11: note: because 'Object' does not satisfy 'HasFunction'
+//                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+// concepts/concepts.cc:42:11: note: because 'Object' does not satisfy 'HasFunction'
 // template <HasFunction T> class FunctionCallWrapper {
+//           ^
+// concepts/concepts.cc:24:6: note: because 'a.function(0)' would be invalid: member access into incomplete type 'Object'
+//   { a.function(0) } -> std::same_as<std::int32_t>;
+//      ^
+// concepts/concepts.cc:56:26: error: constraints not satisfied for class template 'FunctionCallWrapper' [with T = BadObject]
+// class BadObject : public FunctionCallWrapper<BadObject> {
+//                          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// concepts/concepts.cc:42:11: note: because 'BadObject' does not satisfy 'HasFunction'
+// template <HasFunction T> class FunctionCallWrapper {
+//           ^
+// concepts/concepts.cc:24:6: note: because 'a.function(0)' would be invalid: member access into incomplete type 'BadObject'
+//   { a.function(0) } -> std::same_as<std::int32_t>;
 // ```
 //
 // This is user error.
-template <typename T> class FunctionCallWrapper {
+template <HasFunction T> class FunctionCallWrapper {
 public:
   auto function_wrap(std::int32_t value) -> std::int32_t
     requires HasFunction<T>
