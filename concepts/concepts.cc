@@ -2,7 +2,8 @@
 #include <concepts>
 #include <iostream>
 
-template <std::size_t V> struct Int {
+template <std::size_t V>
+struct Int {
   static constexpr std::size_t value = V;
 };
 
@@ -24,26 +25,28 @@ concept HasFunction = requires(T a) {
   { a.function(0) } -> std::same_as<std::int32_t>;
 };
 
-
-// Attempting to constrain the template parameter T to ensure that the type has the
-// required function. However, concepts do not work here. If FunctionCallWrapper is
-// used as a CRTP the type T is not completely defined at the time the concept is
-// evaluated.
+// Attempting to constrain the template parameter T to ensure that the type has
+// the required function. However, concepts do not work here. If
+// FunctionCallWrapper is used as a CRTP the type T is not completely defined at
+// the time the concept is evaluated.
 //
 // ```
-// concepts/concepts.cc:51:23: error: constraints not satisfied for class template 'FunctionCallWrapper' [with T = Object]
-// class Object : public FunctionCallWrapper<Object> {
+// concepts/concepts.cc:51:23: error: constraints not satisfied for class
+// template 'FunctionCallWrapper' [with T = Object] class Object : public
+// FunctionCallWrapper<Object> {
 //                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~
-// concepts/concepts.cc:42:11: note: because 'Object' does not satisfy 'HasFunction'
-// template <HasFunction T> class FunctionCallWrapper {
+// concepts/concepts.cc:42:11: note: because 'Object' does not satisfy
+// 'HasFunction' template <HasFunction T> class FunctionCallWrapper {
 //           ^
-// concepts/concepts.cc:24:6: note: because 'a.function(0)' would be invalid: member access into incomplete type 'Object'
+// concepts/concepts.cc:24:6: note: because 'a.function(0)' would be invalid:
+// member access into incomplete type 'Object'
 //   { a.function(0) } -> std::same_as<std::int32_t>;
 // ```
 //
 // This is user error.
-template <typename T> class FunctionCallWrapper {
-public:
+template <typename T>
+class FunctionCallWrapper {
+ public:
   auto function_wrap(std::int32_t value) -> std::int32_t
     requires HasFunction<T>
   {
@@ -52,12 +55,12 @@ public:
 };
 
 class Object : public FunctionCallWrapper<Object> {
-public:
+ public:
   auto function(std::int32_t value) -> std::int32_t { return value + 42; }
 };
 
 class BadObject : public FunctionCallWrapper<BadObject> {
-public:
+ public:
   auto function(double value) -> double { return std::floor(value) + 42; }
 };
 
@@ -72,13 +75,16 @@ auto main() -> int {
 
   auto bad_obj = BadObject{};
 
-  // concepts/concepts.cc:71:24: error: invalid reference to function 'function_wrap': constraints not satisfied
+  // concepts/concepts.cc:71:24: error: invalid reference to function
+  // 'function_wrap': constraints not satisfied
   //   std::cout << bad_obj.function_wrap(100) << std::endl;
   //                        ^
-  // concepts/concepts.cc:45:14: note: because 'BadObject' does not satisfy 'HasFunction'
+  // concepts/concepts.cc:45:14: note: because 'BadObject' does not satisfy
+  // 'HasFunction'
   //     requires HasFunction<T>
   //              ^
-  // concepts/concepts.cc:24:24: note: because type constraint 'std::same_as<double, std::int32_t>' was not satisfied:
+  // concepts/concepts.cc:24:24: note: because type constraint
+  // 'std::same_as<double, std::int32_t>' was not satisfied:
   //   { a.function(0) } -> std::same_as<std::int32_t>;
   //                        ^
   //
